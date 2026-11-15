@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>OWLIX GPS 🦉</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Cairo',sans-serif; -webkit-tap-highlight-color:transparent; }
+:root { --bg:#F5EFE6; --card:#FDFAF5; --primary:#8B6F47; --secondary:#C9A87C; --text:#3D2B1F; --success:#7A8B5C; --danger:#B85C38; --border:#E8DFD0; --topbar-bg: #8B6F47; --topbar-text: #FDFAF5; }
+body.dark { --bg:#2A2118; --card:#352A1F; --primary:#D4B896; --secondary:#A88860; --text:#EDE4D3; --success:#9BB07A; --danger:#D67A52; --border:#4A3B2A; --topbar-bg: #1F1811; --topbar-text: #EDE4D3; }
+body { background:var(--bg); color:var(--text); min-height:100vh; transition:background 0.3s, color 0.3s; }
+body.dark .leaflet-tile { filter:brightness(0.9) contrast(1.1) sepia(0.15); }
+.screen { min-height:100vh; display:flex; flex-direction:column; } .screen.hidden { display:none; } .hidden { display:none !important; }
+#splash { justify-content:center; align-items:center; text-align:center; gap:16px; }
+.logo-big { width:120px; height:120px; animation:float 2s ease-in-out infinite; }
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+.brand { font-size:34px; font-weight:700; color:var(--primary); letter-spacing:3px; }
+.tagline { color:var(--secondary); font-size:15px; }
+.loader { width:40px; height:40px; border:3px solid var(--border); border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin-top:20px; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.topbar { background:var(--topbar-bg); color:var(--topbar-text); padding:14px 18px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 8px rgba(0,0,0,0.15); }
+.brand-sm { display:flex; align-items:center; gap:8px; font-weight:700; font-size:17px; }
+.logo-sm { width:30px; height:30px; }
+.icon-btn { background:transparent; border:none; color:var(--topbar-text); font-size:22px; cursor:pointer; padding:4px 8px; border-radius:8px; }
+.title { font-weight:600; font-size:17px; flex:1; text-align:center; color:var(--topbar-text); }
+.content { flex:1; padding:20px; display:flex; flex-direction:column; gap:16px; }
+.card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:20px; box-shadow:0 2px 10px rgba(0,0,0,0.05); }
+.card-head { font-size:19px; font-weight:700; color:var(--primary); margin-bottom:12px; }
+.card-status { display:flex; align-items:center; gap:8px; margin-bottom:16px; font-size:14px; }
+.dot { display:inline-block; width:10px; height:10px; border-radius:50%; background:#ccc; }
+.dot.green { background:var(--success); animation:pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(122,139,92,0.6)} 50%{box-shadow:0 0 0 8px rgba(122,139,92,0)} }
+.btn { border:none; border-radius:12px; padding:14px 20px; font-size:16px; font-weight:600; font-family:inherit; cursor:pointer; width:100%; transition:all 0.15s; }
+.btn:active { transform:scale(0.97); }
+.btn.primary { background:var(--primary); color:#fff; } body.dark .btn.primary { color:#1F1811; }
+.btn.secondary { background:var(--secondary); color:#3D2B1F; }
+.btn.danger { background:var(--danger); color:#fff; }
+.btn.outline { background:transparent; border:2px solid var(--primary); color:var(--primary); }
+.btn.big { padding:18px; font-size:18px; }
+.big-icon { font-size:56px; text-align:center; margin:20px 0; }
+.center-text { text-align:center; color:var(--secondary); margin:12px 0 20px; line-height:1.7; }
+.success-badge { background:var(--success); color:#fff; padding:10px; border-radius:12px; text-align:center; font-weight:700; margin-bottom:16px; }
+.code-display { background:var(--card); border:3px solid var(--secondary); border-radius:16px; padding:24px; text-align:center; font-size:48px; font-weight:700; color:var(--primary); letter-spacing:8px; font-family:monospace; margin:16px 0; }
+.btn-row { display:flex; gap:10px; margin:12px 0; } .btn-row .btn { flex:1; }
+.stats { background:var(--card); padding:16px; border-radius:12px; display:flex; flex-direction:column; gap:10px; margin:16px 0; border:1px solid var(--border); }
+.stat-row { display:flex; justify-content:space-between; font-size:14px; } .stat-row span { color:var(--primary); font-weight:600; }
+.join-form { padding:40px 20px; display:flex; flex-direction:column; gap:16px; }
+.code-input { width:100%; padding:20px; font-size:36px; font-family:monospace; text-align:center; letter-spacing:12px; border:3px solid var(--secondary); border-radius:16px; background:var(--card); color:var(--primary); font-weight:700; }
+#map { width:100%; height:50vh; background:#e8e0d0; }
+.map-status { background:var(--card); padding:12px 20px; display:flex; align-items:center; gap:8px; border-bottom:1px solid var(--border); font-size:14px; }
+.history-section { padding:20px; } .history-section h3 { color:var(--primary); margin-bottom:12px; }
+.date-picker { width:100%; padding:12px; border:2px solid var(--border); border-radius:12px; font-family:inherit; font-size:15px; background:var(--card); color:var(--text); margin-bottom:12px; }
+.history-list { background:var(--card); border-radius:12px; padding:12px; max-height:300px; overflow-y:auto; border:1px solid var(--border); }
+.history-item { padding:8px 0; border-bottom:1px solid var(--border); font-size:13px; display:flex; justify-content:space-between; }
+.history-item:last-child { border:none; } .history-item .time { color:var(--primary); font-weight:600; }
+h3 { color:var(--primary); font-size:16px; margin-bottom:4px; }
+.theme-options { display:flex; flex-direction:column; gap:10px; margin-top:12px; }
+.theme-option { display:flex; align-items:center; gap:12px; padding:14px 16px; border:2px solid var(--border); border-radius:12px; cursor:pointer; background:var(--card); }
+.theme-option:has(input:checked) { border-color:var(--primary); background:var(--bg); }
+.theme-option input { width:20px; height:20px; accent-color:var(--primary); }
+.theme-option span { font-weight:600; font-size:15px; }
+</style>
+</head>
+<body>
+<div id="splash" class="screen">
+  <svg class="logo-big" viewBox="0 0 100 100"><ellipse cx="50" cy="56" rx="34" ry="38" fill="#8B6F47"/><path d="M 20 28 L 28 14 L 36 30 Z" fill="#8B6F47"/><path d="M 80 28 L 72 14 L 64 30 Z" fill="#8B6F47"/><ellipse cx="50" cy="62" rx="20" ry="26" fill="#C9A87C"/><circle cx="38" cy="46" r="13" fill="#FDFAF5"/><circle cx="62" cy="46" r="13" fill="#FDFAF5"/><circle cx="38" cy="46" r="7" fill="#3D2B1F"/><circle cx="62" cy="46" r="7" fill="#3D2B1F"/><circle cx="41" cy="43" r="2.5" fill="#FDFAF5"/><circle cx="65" cy="43" r="2.5" fill="#FDFAF5"/><path d="M 45 56 L 55 56 L 50 65 Z" fill="#B85C38"/></svg>
+  <div class="brand">OWLIX GPS</div>
+  <div class="tagline">متتبع الموقع الذكي <b>(v3.0)</b></div>
+  <div class="loader"></div>
+</div>
+<div id="home" class="screen hidden">
+  <div class="topbar"><div class="brand-sm"><svg class="logo-sm" viewBox="0 0 100 100"><ellipse cx="50" cy="56" rx="34" ry="38" fill="#FDFAF5"/><ellipse cx="50" cy="62" rx="20" ry="26" fill="#C9A87C"/><circle cx="38" cy="46" r="10" fill="#3D2B1F"/><circle cx="62" cy="46" r="10" fill="#3D2B1F"/></svg> OWLIX GPS</div><button class="icon-btn" onclick="goTo('settings')">⚙️</button></div>
+  <div class="content">
+    <div class="card"><div class="card-head">📤 مشاركة موقعي</div><div class="card-status"><span class="dot" id="shareDot"></span><span id="shareStatus">متوقفة</span></div><button class="btn primary big" onclick="goTo('share')">ابدأ المشاركة</button></div>
+    <div class="card"><div class="card-head">📍 متابعة موقع</div><div class="card-status"><span class="dot" id="viewDot"></span><span id="viewStatus">غير متصل</span></div><button class="btn secondary big" onclick="goTo('view')">افتح الخريطة</button></div>
+  </div>
+</div>
+<div id="share" class="screen hidden">
+  <div class="topbar"><button class="icon-btn" onclick="goTo('home')">←</button><div class="title">مشاركة الموقع</div><span class="dot" id="shareActiveDot"></span></div>
+  <div class="content" id="shareIdle"><div class="big-icon">📤</div><p class="center-text">سيتم إرسال موقعك للخادم في الخلفية.<br>أعطِ الكود للشخص الذي سيتابعك.</p><button class="btn primary big" onclick="startSharing()">بدء المشاركة (24 ساعة)</button></div>
+  <div class="content hidden" id="shareActive">
+    <div class="success-badge">🟢 المشاركة تعمل في الخلفية</div><p class="center-text">كود المتابعة الخاص بك:</p><div class="code-display" id="codeDisplay">------</div>
+    <div class="btn-row"><button class="btn secondary" onclick="copyCode()">📋 نسخ</button><button class="btn secondary" onclick="shareCode()">📤 مشاركة</button></div>
+    <div class="stats"><div class="stat-row"><span>⏱ يعمل منذ</span><span id="shareTimer">00:00:00</span></div><div class="stat-row"><span>📡 أُرسلت</span><span id="pointsCount">0</span></div><div class="stat-row"><span>📥 في الانتظار</span><span id="queueCount">0</span></div><div class="stat-row"><span>📍 الدقة</span><span id="accuracyInfo">—</span></div></div>
+    <button class="btn danger" onclick="stopSharing()">🛑 إيقاف المشاركة</button>
+  </div>
+</div>
+<div id="view" class="screen hidden">
+  <div class="topbar">
+    <button class="icon-btn" onclick="goTo('home')">←</button>
+    <div class="title">متابعة موقع</div>
+    <button class="icon-btn" onclick="refreshMap()">🔄</button>
+    <button class="icon-btn" id="changeCodeBtn" onclick="resetViewSession()" style="display:none;" title="تغيير الكود">✖</button>
+  </div>
+  <div id="joinForm" class="join-form"><div class="big-icon">📍</div><p class="center-text">أدخل الكود المكون من 6 أرقام:</p><input type="tel" id="codeInput" class="code-input" maxlength="6" placeholder="000000" inputmode="numeric"><button class="btn primary big" onclick="joinSession()">متابعة</button></div>
+  <div id="mapView" class="hidden">
+    <div class="map-status"><span class="dot green"></span><span>متصل</span><span style="margin-right:auto;color:var(--secondary)" id="lastUpdate">—</span></div>
+    <div id="map"></div>
+    <div class="history-section"><h3>📅 السجل اليومي</h3><input type="date" id="datePicker" class="date-picker" onchange="refreshMap()"><div class="history-list" id="historyList"></div></div>
+  </div>
+</div>
+<div id="settings" class="screen hidden">
+  <div class="topbar"><button class="icon-btn" onclick="goTo('home')">←</button><div class="title">الإعدادات</div><span style="width:30px"></span></div>
+  <div class="content">
+    <div class="card"><h3>🎨 المظهر</h3><div class="theme-options"><label class="theme-option"><input type="radio" name="theme" value="light" onchange="setTheme('light')"><span>☀️ نهاري</span></label><label class="theme-option"><input type="radio" name="theme" value="dark" onchange="setTheme('dark')"><span>🌙 ليلي</span></label><label class="theme-option"><input type="radio" name="theme" value="auto" onchange="setTheme('auto')"><span>⚙️ تلقائي</span></label></div></div>
+  </div>
+</div>
+<script>
+const BGGeo = window.Capacitor ? window.Capacitor.Plugins.BackgroundGeolocation : null;
+const state = { sharing: { sessionId:null, code:null, startTime:null, pointsSent:0, timerInterval:null, watchId:null }, viewing: { sessionId:null, map:null, marker:null, polyline:null, pollInterval:null } };
+
+// سيتم وضع رابط Render هنا لاحقاً
+const SERVER_URL = 'https://owlix-server.onrender.com'; 
+
+function getServerUrl() { return SERVER_URL; }
+
+setTimeout(() => {
+    try { const savedTheme = localStorage.getItem('owlix_theme') || 'light'; applyTheme(savedTheme); } catch(e) {}
+    goTo('home'); 
+}, 1500);
+
+function goTo(id) { document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); if (id === 'view' && state.viewing.map) setTimeout(() => state.viewing.map.invalidateSize(), 100); if (id === 'settings') { loadTheme(); } }
+
+async function startSharing() {
+  try {
+    const res = await fetch(`${getServerUrl()}/api/sessions`, { method: 'POST' });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    
+    state.sharing.sessionId = data.sessionId;
+    state.sharing.code = data.code;
+    state.sharing.startTime = Date.now();
+    state.sharing.pointsSent = 0;
+
+    document.getElementById('shareIdle').classList.add('hidden');
+    document.getElementById('shareActive').classList.remove('hidden');
+    document.getElementById('codeDisplay').textContent = data.code;
+    document.getElementById('shareActiveDot').classList.add('green');
+    document.getElementById('shareStatus').textContent = 'نشطة (خلفية)';
+    document.getElementById('shareDot').classList.add('green');
+    startTimer();
+
+    if (BGGeo) {
+      state.sharing.watchId = await BGGeo.addWatcher({
+        backgroundMessage: "OWLIX يقوم بتتبع موقعك",
+        backgroundTitle: "المشاركة نشطة",
+        requestPermissions: true,
+        stale: false,
+        distanceFilter: 20 
+      }, async (location, error) => {
+        if (error) { console.error(error); return; }
+        if (location) { await queueAndSendLocation(location.latitude, location.longitude, location.accuracy); }
+      });
+    } else {
+      if (navigator.geolocation) {
+        state.sharing.watchId = navigator.geolocation.watchPosition(
+          (pos) => queueAndSendLocation(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy),
+          (err) => console.warn(err), { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 }
+        );
+      }
+    }
+  } catch (e) { alert('فشل الاتصال بالخادم.\nالسبب: ' + e.message); }
+}
+
+function startTimer() { state.sharing.timerInterval = setInterval(() => { const e = Math.floor((Date.now() - state.sharing.startTime) / 1000); document.getElementById('shareTimer').textContent = `${String(Math.floor(e/3600)).padStart(2,'0')}:${String(Math.floor((e%3600)/60)).padStart(2,'0')}:${String(e%60).padStart(2,'0')}`; }, 1000); }
+
+function getQueue() { return JSON.parse(localStorage.getItem('owlix_queue') || '[]'); }
+function saveQueue(q) { localStorage.setItem('owlix_queue', JSON.stringify(q)); updateQueueUI(); }
+function updateQueueUI() { document.getElementById('queueCount').textContent = getQueue().length; }
+
+async function queueAndSendLocation(lat, lng, accuracy) {
+  if (!state.sharing.sessionId) return;
+  let q = getQueue();
+  q.push({ sessionId: state.sharing.sessionId, lat, lng, accuracy, ts: Date.now() });
+  saveQueue(q);
+  await flushQueue();
+}
+
+async function flushQueue() {
+  let q = getQueue();
+  if (q.length === 0) return;
+  let remaining = [];
+  for (let point of q) {
+    try {
+      const res = await fetch(`${getServerUrl()}/api/sessions/${point.sessionId}/location`, { 
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify({ lat: point.lat, lng: point.lng, accuracy: point.accuracy }) 
+      });
+      if (res.ok) {
+        state.sharing.pointsSent++;
+        document.getElementById('pointsCount').textContent = state.sharing.pointsSent;
+        document.getElementById('accuracyInfo').textContent = `±${Math.round(point.accuracy)}م`;
+      } else { remaining.push(point); }
+    } catch (e) { remaining.push(point); break; }
+  }
+  saveQueue(remaining);
+}
+
+async function stopSharing() {
+  if (BGGeo && state.sharing.watchId) await BGGeo.removeWatcher({ id: state.sharing.watchId });
+  else if (state.sharing.watchId) navigator.geolocation.clearWatch(state.sharing.watchId);
+  if (state.sharing.timerInterval) clearInterval(state.sharing.timerInterval);
+  
+  if (state.sharing.sessionId) {
+    await flushQueue();
+    await fetch(`${getServerUrl()}/api/sessions/${state.sharing.sessionId}`, { method: 'DELETE' }).catch(()=>{});
+  }
+  
+  state.sharing = { sessionId:null, code:null, startTime:null, pointsSent:0, timerInterval:null, watchId:null };
+  document.getElementById('shareIdle').classList.remove('hidden'); document.getElementById('shareActive').classList.add('hidden'); document.getElementById('shareActiveDot').classList.remove('green'); document.getElementById('shareStatus').textContent = 'متوقفة'; document.getElementById('shareDot').classList.remove('green');
+}
+
+function copyCode() { navigator.clipboard.writeText(state.sharing.code).then(() => alert('تم النسخ')); }
+function shareCode() { if (navigator.share) navigator.share({ text: `كود OWLIX: ${state.sharing.code}` }); else copyCode(); }
+
+async function joinSession() {
+  const code = document.getElementById('codeInput').value.trim();
+  if (code.length !== 6) return alert('أدخل 6 أرقام');
+  try {
+    const res = await fetch(`${getServerUrl()}/api/sessions/join`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
+    if (!res.ok) return alert('كود غير صالح أو الخادم غير متاح.');
+    const data = await res.json();
+    state.viewing.sessionId = data.sessionId;
+    document.getElementById('joinForm').classList.add('hidden'); 
+    document.getElementById('mapView').classList.remove('hidden'); 
+    document.getElementById('changeCodeBtn').style.display = 'block';
+    document.getElementById('viewStatus').textContent = 'متصل'; 
+    document.getElementById('viewDot').classList.add('green');
+    initMap();
+    const today = new Date().toISOString().split('T')[0]; document.getElementById('datePicker').value = today; refreshMap();
+    state.viewing.pollInterval = setInterval(refreshMap, 5000);
+  } catch (e) { alert('خطأ في الاتصال بالخادم: ' + e.message); }
+}
+
+function resetViewSession() {
+    if (state.viewing.pollInterval) clearInterval(state.viewing.pollInterval);
+    state.viewing.sessionId = null;
+    state.viewing.hasCentered = false;
+    document.getElementById('joinForm').classList.remove('hidden');
+    document.getElementById('mapView').classList.add('hidden');
+    document.getElementById('changeCodeBtn').style.display = 'none';
+    document.getElementById('codeInput').value = '';
+    document.getElementById('viewStatus').textContent = 'غير متصل';
+    document.getElementById('viewDot').classList.remove('green');
+    if (state.viewing.polyline) state.viewing.map.removeLayer(state.viewing.polyline);
+    if (state.viewing.marker) state.viewing.map.removeLayer(state.viewing.marker);
+}
+
+function initMap() { if (state.viewing.map) return; state.viewing.map = L.map('map').setView([33.315, 44.366], 12); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(state.viewing.map); }
+
+async function refreshMap() {
+  if (!state.viewing.sessionId) return;
+  const dateStr = document.getElementById('datePicker').value || new Date().toISOString().split('T')[0];
+  try {
+    const res = await fetch(`${getServerUrl()}/api/sessions/${state.viewing.sessionId}/history?date=${dateStr}`);
+    const points = await res.json();
+    if (state.viewing.polyline) state.viewing.map.removeLayer(state.viewing.polyline);
+    if (points.length > 0) {
+      const coords = points.map(p => [p.lat, p.lng]);
+      state.viewing.polyline = L.polyline(coords, { color:'#8B6F47', weight:3 }).addTo(state.viewing.map);
+      const last = points[points.length - 1];
+      if (state.viewing.marker) state.viewing.marker.setLatLng([last.lat, last.lng]);
+      else state.viewing.marker = L.marker([last.lat, last.lng]).addTo(state.viewing.map);
+      if (!state.viewing.hasCentered) { state.viewing.map.fitBounds(state.viewing.polyline.getBounds(), { padding:[30,30] }); state.viewing.hasCentered = true; }
+      document.getElementById('lastUpdate').textContent = 'آخر تحديث: الآن';
+    }
+    renderHistory(points);
+  } catch (e) {}
+}
+
+function renderHistory(points) {
+  const list = document.getElementById('historyList');
+  if (points.length === 0) return list.innerHTML = '<p style="text-align:center;color:#999;padding:12px">لا توجد بيانات</p>';
+  const step = Math.max(1, Math.floor(points.length / 30)); const items = [];
+  for (let i = 0; i < points.length; i += step) { const t = new Date(points[i].recorded_at); items.push(`<div class="history-item"><span class="time">${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}</span><span>${points[i].lat.toFixed(4)}, ${points[i].lng.toFixed(4)}</span></div>`); }
+  list.innerHTML = items.join('');
+}
+
+function applyTheme(mode) { const isDark = mode === 'dark' || (mode === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches); document.body.classList.toggle('dark', isDark); const radio = document.querySelector(`input[name="theme"][value="${mode}"]`); if (radio) radio.checked = true; }
+function setTheme(mode) { localStorage.setItem('owlix_theme', mode); applyTheme(mode); }
+function loadTheme() { applyTheme(localStorage.getItem('owlix_theme') || 'light'); }
+</script>
+</body>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                            </html>
