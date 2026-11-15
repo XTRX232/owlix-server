@@ -1,287 +1,558 @@
+cat > ~/owlix/www/index.html << 'EOF'
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>OWLIX GPS 🦉</title>
+<title>OWLIX GPS</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; font-family:'Cairo',sans-serif; -webkit-tap-highlight-color:transparent; }
-:root { --bg:#F5EFE6; --card:#FDFAF5; --primary:#8B6F47; --secondary:#C9A87C; --text:#3D2B1F; --success:#7A8B5C; --danger:#B85C38; --border:#E8DFD0; --topbar-bg: #8B6F47; --topbar-text: #FDFAF5; }
-body.dark { --bg:#2A2118; --card:#352A1F; --primary:#D4B896; --secondary:#A88860; --text:#EDE4D3; --success:#9BB07A; --danger:#D67A52; --border:#4A3B2A; --topbar-bg: #1F1811; --topbar-text: #EDE4D3; }
-body { background:var(--bg); color:var(--text); min-height:100vh; transition:background 0.3s, color 0.3s; }
-body.dark .leaflet-tile { filter:brightness(0.9) contrast(1.1) sepia(0.15); }
-.screen { min-height:100vh; display:flex; flex-direction:column; } .screen.hidden { display:none; } .hidden { display:none !important; }
-#splash { justify-content:center; align-items:center; text-align:center; gap:16px; }
-.logo-big { width:120px; height:120px; animation:float 2s ease-in-out infinite; }
-@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-.brand { font-size:34px; font-weight:700; color:var(--primary); letter-spacing:3px; }
-.tagline { color:var(--secondary); font-size:15px; }
-.loader { width:40px; height:40px; border:3px solid var(--border); border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin-top:20px; }
-@keyframes spin { to { transform:rotate(360deg); } }
-.topbar { background:var(--topbar-bg); color:var(--topbar-text); padding:14px 18px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 8px rgba(0,0,0,0.15); }
-.brand-sm { display:flex; align-items:center; gap:8px; font-weight:700; font-size:17px; }
-.logo-sm { width:30px; height:30px; }
-.icon-btn { background:transparent; border:none; color:var(--topbar-text); font-size:22px; cursor:pointer; padding:4px 8px; border-radius:8px; }
-.title { font-weight:600; font-size:17px; flex:1; text-align:center; color:var(--topbar-text); }
-.content { flex:1; padding:20px; display:flex; flex-direction:column; gap:16px; }
-.card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:20px; box-shadow:0 2px 10px rgba(0,0,0,0.05); }
-.card-head { font-size:19px; font-weight:700; color:var(--primary); margin-bottom:12px; }
-.card-status { display:flex; align-items:center; gap:8px; margin-bottom:16px; font-size:14px; }
-.dot { display:inline-block; width:10px; height:10px; border-radius:50%; background:#ccc; }
-.dot.green { background:var(--success); animation:pulse 1.5s infinite; }
-@keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(122,139,92,0.6)} 50%{box-shadow:0 0 0 8px rgba(122,139,92,0)} }
-.btn { border:none; border-radius:12px; padding:14px 20px; font-size:16px; font-weight:600; font-family:inherit; cursor:pointer; width:100%; transition:all 0.15s; }
-.btn:active { transform:scale(0.97); }
-.btn.primary { background:var(--primary); color:#fff; } body.dark .btn.primary { color:#1F1811; }
-.btn.secondary { background:var(--secondary); color:#3D2B1F; }
-.btn.danger { background:var(--danger); color:#fff; }
-.btn.outline { background:transparent; border:2px solid var(--primary); color:var(--primary); }
-.btn.big { padding:18px; font-size:18px; }
-.big-icon { font-size:56px; text-align:center; margin:20px 0; }
-.center-text { text-align:center; color:var(--secondary); margin:12px 0 20px; line-height:1.7; }
-.success-badge { background:var(--success); color:#fff; padding:10px; border-radius:12px; text-align:center; font-weight:700; margin-bottom:16px; }
-.code-display { background:var(--card); border:3px solid var(--secondary); border-radius:16px; padding:24px; text-align:center; font-size:48px; font-weight:700; color:var(--primary); letter-spacing:8px; font-family:monospace; margin:16px 0; }
-.btn-row { display:flex; gap:10px; margin:12px 0; } .btn-row .btn { flex:1; }
-.stats { background:var(--card); padding:16px; border-radius:12px; display:flex; flex-direction:column; gap:10px; margin:16px 0; border:1px solid var(--border); }
-.stat-row { display:flex; justify-content:space-between; font-size:14px; } .stat-row span { color:var(--primary); font-weight:600; }
-.join-form { padding:40px 20px; display:flex; flex-direction:column; gap:16px; }
-.code-input { width:100%; padding:20px; font-size:36px; font-family:monospace; text-align:center; letter-spacing:12px; border:3px solid var(--secondary); border-radius:16px; background:var(--card); color:var(--primary); font-weight:700; }
-#map { width:100%; height:50vh; background:#e8e0d0; }
-.map-status { background:var(--card); padding:12px 20px; display:flex; align-items:center; gap:8px; border-bottom:1px solid var(--border); font-size:14px; }
-.history-section { padding:20px; } .history-section h3 { color:var(--primary); margin-bottom:12px; }
-.date-picker { width:100%; padding:12px; border:2px solid var(--border); border-radius:12px; font-family:inherit; font-size:15px; background:var(--card); color:var(--text); margin-bottom:12px; }
-.history-list { background:var(--card); border-radius:12px; padding:12px; max-height:300px; overflow-y:auto; border:1px solid var(--border); }
-.history-item { padding:8px 0; border-bottom:1px solid var(--border); font-size:13px; display:flex; justify-content:space-between; }
-.history-item:last-child { border:none; } .history-item .time { color:var(--primary); font-weight:600; }
-h3 { color:var(--primary); font-size:16px; margin-bottom:4px; }
-.theme-options { display:flex; flex-direction:column; gap:10px; margin-top:12px; }
-.theme-option { display:flex; align-items:center; gap:12px; padding:14px 16px; border:2px solid var(--border); border-radius:12px; cursor:pointer; background:var(--card); }
-.theme-option:has(input:checked) { border-color:var(--primary); background:var(--bg); }
-.theme-option input { width:20px; height:20px; accent-color:var(--primary); }
-.theme-option span { font-weight:600; font-size:15px; }
+:root {
+    --bg: #f1f5f9; --card: #ffffff; --primary: #3b82f6; --text: #1e293b; --text-muted: #64748b;
+    --border: #e2e8f0; --success: #10b981; --danger: #ef4444; --topbar-bg: #ffffff;
+}
+body.dark {
+    --bg: #0f172a; --card: #1e293b; --primary: #60a5fa; --text: #f8fafc; --text-muted: #94a3b8;
+    --border: #334155; --topbar-bg: #1e293b;
+}
+body { background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; transition: background 0.3s, color 0.3s; }
+.screen { min-height: 100vh; display: flex; flex-direction: column; } 
+.screen.hidden { display: none; } .hidden { display: none !important; }
+
+/* فلتر الخريطة في الوضع الليلي */
+body.dark .leaflet-tile { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
+
+#splash { justify-content: center; align-items: center; text-align: center; gap: 20px; background: var(--bg); }
+.logo-big { width: 120px; height: 120px; margin-bottom: 20px; }
+.brand { font-size: 36px; font-weight: 700; color: var(--primary); letter-spacing: 2px; }
+.tagline { color: var(--text-muted); font-size: 15px; margin-top: 5px; }
+.loader { width: 50px; height: 4px; background: var(--border); border-radius: 2px; margin-top: 30px; position: relative; overflow: hidden; }
+.loader::after { content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 50%; background: var(--primary); animation: loadBar 1.5s infinite ease-in-out; }
+@keyframes loadBar { 0% { left: -50%; } 100% { left: 100%; } }
+
+.topbar { background: var(--topbar-bg); color: var(--text); padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 1000; }
+.brand-sm { font-weight: 700; font-size: 18px; color: var(--primary); }
+.title { font-weight: 600; font-size: 18px; flex: 1; text-align: center; }
+.icon-btn { background: transparent; border: none; color: var(--text); font-size: 22px; cursor: pointer; padding: 5px; }
+
+.content { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+.card-head { font-size: 20px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+.card-status { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; font-size: 14px; color: var(--text-muted); }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #cbd5e1; }
+.dot.green { background: var(--success); box-shadow: 0 0 10px var(--success); animation: pulseActive 2s infinite; }
+@keyframes pulseActive { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.7; } 100% { transform: scale(1); opacity: 1; } }
+
+.btn { border: none; border-radius: 12px; padding: 16px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.btn:active { transform: scale(0.97); }
+.btn.primary { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
+.btn.secondary { background: var(--bg); color: var(--primary); border: 1px solid var(--border); }
+.btn.danger { background: #fee2e2; color: var(--danger); }
+body.dark .btn.danger { background: rgba(239, 68, 68, 0.2); }
+.btn.big { padding: 18px; font-size: 17px; }
+
+.big-icon { display: flex; justify-content: center; margin: 30px 0; }
+.big-icon svg { width: 70px; height: 70px; color: var(--primary); }
+.center-text { text-align: center; color: var(--text-muted); margin: 15px 0 30px; line-height: 1.6; font-size: 15px; }
+.success-badge { background: #d1fae5; border: 1px solid var(--success); color: #065f46; padding: 12px; border-radius: 12px; text-align: center; font-weight: 600; margin-bottom: 20px; display: flex; justify-content: center; gap: 8px; }
+body.dark .success-badge { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+.code-display { background: var(--bg); border: 2px solid var(--primary); border-radius: 16px; padding: 25px; text-align: center; font-size: 48px; font-weight: 700; color: var(--primary); letter-spacing: 10px; font-family: monospace; margin: 20px 0; }
+.btn-row { display: flex; gap: 10px; margin: 15px 0; }
+.btn-row .btn { flex: 1; padding: 12px; font-size: 14px; }
+.stats { background: var(--bg); padding: 16px; border-radius: 12px; display: flex; flex-direction: column; gap: 12px; margin: 20px 0; border: 1px solid var(--border); }
+.stat-row { display: flex; justify-content: space-between; font-size: 14px; color: var(--text-muted); }
+.stat-row span:last-child { color: var(--text); font-weight: 600; font-family: monospace; font-size: 15px; }
+
+/* Tabs (التبويبات) */
+.tabs { display: flex; background: var(--card); border-bottom: 1px solid var(--border); position: sticky; top: 57px; z-index: 999;}
+.tab-btn { flex: 1; padding: 15px; background: none; border: none; border-bottom: 3px solid transparent; color: var(--text-muted); font-weight: 700; font-size: 15px; cursor: pointer; transition: all 0.3s; }
+.tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); background: var(--bg); }
+.tab-content { display: none; flex: 1; flex-direction: column; }
+.tab-content.active { display: flex; }
+
+/* الخرائط */
+.map-container { width: 100%; height: 40vh; background: #e2e8f0; border-bottom: 1px solid var(--border); }
+body.dark .map-container { background: #111827; }
+
+/* التبويب المباشر */
+.live-list { padding: 15px; background: var(--bg); flex: 1; }
+.live-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid var(--border); background: var(--card); border-radius: 10px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.live-item .coords { font-family: monospace; font-size: 14px; color: var(--text-muted); }
+.live-item .time { font-weight: 700; color: var(--primary); background: var(--bg); padding: 4px 8px; border-radius: 6px; font-size: 13px;}
+
+/* التبويب السجل */
+.history-list { padding: 15px; flex: 1; overflow-y: auto;}
+.accordion { background: var(--card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; overflow: hidden; }
+.accordion-header { padding: 15px; background: var(--card); font-weight: 700; display: flex; justify-content: space-between; cursor: pointer; }
+.accordion-content { display: none; background: var(--bg); padding: 10px; border-top: 1px solid var(--border); }
+.accordion-content.open { display: block; }
+.history-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 14px; }
+.history-item:last-child { border: none; }
+.history-item:hover { background: var(--card); }
+
+/* التبويب اليدوي */
+.manual-form { padding: 20px; background: var(--bg); }
+.search-box { display: flex; gap: 8px; margin-bottom: 15px; }
+.search-box input { flex: 1; padding: 15px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); color: var(--text); outline: none; font-family: monospace; font-size: 16px;}
+.search-box button { padding: 0 20px; border-radius: 12px; background: var(--primary); color: #fff; border: none; font-weight: bold; cursor: pointer;}
+
+/* زر النسخ */
+.copy-btn { background: transparent; border: none; font-size: 18px; cursor: pointer; color: var(--primary); padding: 5px; }
+
+/* شاشة عرض الإحداثي المسجل (خريطة كاملة) */
+#historicalModal { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; }
+#historicalModal.hidden { display: none; }
+#map-history { flex: 1; width: 100%; }
+.modal-header { padding: 15px 20px; background: var(--topbar-bg); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+.modal-title { font-weight: 700; font-size: 18px; }
+
+/* إعدادات */
+.theme-options { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+.theme-option { display: flex; align-items: center; justify-content: space-between; padding: 15px; border: 1px solid var(--border); border-radius: 12px; cursor: pointer; background: var(--bg); }
+.theme-option input { width: 20px; height: 20px; accent-color: var(--primary); }
 </style>
 </head>
 <body>
 <div id="splash" class="screen">
-  <svg class="logo-big" viewBox="0 0 100 100"><ellipse cx="50" cy="56" rx="34" ry="38" fill="#8B6F47"/><path d="M 20 28 L 28 14 L 36 30 Z" fill="#8B6F47"/><path d="M 80 28 L 72 14 L 64 30 Z" fill="#8B6F47"/><ellipse cx="50" cy="62" rx="20" ry="26" fill="#C9A87C"/><circle cx="38" cy="46" r="13" fill="#FDFAF5"/><circle cx="62" cy="46" r="13" fill="#FDFAF5"/><circle cx="38" cy="46" r="7" fill="#3D2B1F"/><circle cx="62" cy="46" r="7" fill="#3D2B1F"/><circle cx="41" cy="43" r="2.5" fill="#FDFAF5"/><circle cx="65" cy="43" r="2.5" fill="#FDFAF5"/><path d="M 45 56 L 55 56 L 50 65 Z" fill="#B85C38"/></svg>
-  <div class="brand">OWLIX GPS</div>
-  <div class="tagline">متتبع الموقع الذكي <b>(v3.0)</b></div>
+  <svg class="logo-big" viewBox="0 0 100 100"><ellipse cx="50" cy="56" rx="34" ry="38" fill="var(--primary)"/><path d="M 20 28 L 28 14 L 36 30 Z" fill="var(--primary)"/><path d="M 80 28 L 72 14 L 64 30 Z" fill="var(--primary)"/><ellipse cx="50" cy="62" rx="20" ry="26" fill="var(--bg)"/><circle cx="38" cy="46" r="13" fill="#fff"/><circle cx="62" cy="46" r="13" fill="#fff"/><circle cx="38" cy="46" r="7" fill="#1e293b"/><circle cx="62" cy="46" r="7" fill="#1e293b"/><circle cx="41" cy="43" r="2.5" fill="#fff"/><circle cx="65" cy="43" r="2.5" fill="#fff"/><path d="M 45 56 L 55 56 L 50 65 Z" fill="var(--primary)"/></svg>
+  <div class="brand">OWLIX</div>
+  <div class="tagline">متتبع الموقع الذكي (v4.0)</div>
   <div class="loader"></div>
 </div>
+
 <div id="home" class="screen hidden">
-  <div class="topbar"><div class="brand-sm"><svg class="logo-sm" viewBox="0 0 100 100"><ellipse cx="50" cy="56" rx="34" ry="38" fill="#FDFAF5"/><ellipse cx="50" cy="62" rx="20" ry="26" fill="#C9A87C"/><circle cx="38" cy="46" r="10" fill="#3D2B1F"/><circle cx="62" cy="46" r="10" fill="#3D2B1F"/></svg> OWLIX GPS</div><button class="icon-btn" onclick="goTo('settings')">⚙️</button></div>
+  <div class="topbar"><div class="brand-sm">OWLIX GPS</div><button class="icon-btn" onclick="goTo('settings')">⚙️</button></div>
   <div class="content">
-    <div class="card"><div class="card-head">📤 مشاركة موقعي</div><div class="card-status"><span class="dot" id="shareDot"></span><span id="shareStatus">متوقفة</span></div><button class="btn primary big" onclick="goTo('share')">ابدأ المشاركة</button></div>
-    <div class="card"><div class="card-head">📍 متابعة موقع</div><div class="card-status"><span class="dot" id="viewDot"></span><span id="viewStatus">غير متصل</span></div><button class="btn secondary big" onclick="goTo('view')">افتح الخريطة</button></div>
+    <div class="card">
+        <div class="card-head">📤 مشاركة الموقع</div>
+        <div class="card-status"><span class="dot" id="shareDot"></span><span id="shareStatus">غير نشط</span></div>
+        <button class="btn primary big" onclick="goTo('share')">بدء المشاركة</button>
+    </div>
+    <div class="card">
+        <div class="card-head">📍 متابعة الموقع</div>
+        <div class="card-status"><span class="dot" id="viewDot"></span><span id="viewStatus">غير متصل</span></div>
+        <button class="btn secondary big" onclick="goTo('view')">فتح الخريطة</button>
+    </div>
   </div>
 </div>
+
 <div id="share" class="screen hidden">
-  <div class="topbar"><button class="icon-btn" onclick="goTo('home')">←</button><div class="title">مشاركة الموقع</div><span class="dot" id="shareActiveDot"></span></div>
-  <div class="content" id="shareIdle"><div class="big-icon">📤</div><p class="center-text">سيتم إرسال موقعك للخادم في الخلفية.<br>أعطِ الكود للشخص الذي سيتابعك.</p><button class="btn primary big" onclick="startSharing()">بدء المشاركة (24 ساعة)</button></div>
+  <div class="topbar"><button class="icon-btn" onclick="goTo('home')">←</button><div class="title">المشاركة</div><span style="width:30px"></span></div>
+  <div class="content" id="shareIdle">
+    <div class="big-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+    <p class="center-text">سيتم إرسال موقعك للخادم.<br>أعطِ الكود للشخص الذي سيتابعك.</p>
+    <button class="btn primary big" onclick="startSharing()">بدء المشاركة (24 ساعة)</button>
+  </div>
   <div class="content hidden" id="shareActive">
-    <div class="success-badge">🟢 المشاركة تعمل في الخلفية</div><p class="center-text">كود المتابعة الخاص بك:</p><div class="code-display" id="codeDisplay">------</div>
-    <div class="btn-row"><button class="btn secondary" onclick="copyCode()">📋 نسخ</button><button class="btn secondary" onclick="shareCode()">📤 مشاركة</button></div>
-    <div class="stats"><div class="stat-row"><span>⏱ يعمل منذ</span><span id="shareTimer">00:00:00</span></div><div class="stat-row"><span>📡 أُرسلت</span><span id="pointsCount">0</span></div><div class="stat-row"><span>📥 في الانتظار</span><span id="queueCount">0</span></div><div class="stat-row"><span>📍 الدقة</span><span id="accuracyInfo">—</span></div></div>
-    <button class="btn danger" onclick="stopSharing()">🛑 إيقاف المشاركة</button>
+    <div class="success-badge">✅ المشاركة تعمل في الخلفية</div>
+    <p class="center-text">كود المتابعة الخاص بك:</p>
+    <div class="code-display" id="codeDisplay">------</div>
+    <div class="btn-row"><button class="btn secondary" onclick="copyCode()">نسخ</button><button class="btn secondary" onclick="shareCode()">مشاركة</button></div>
+    <div class="stats">
+        <div class="stat-row"><span>وقت التشغيل</span><span id="shareTimer">00:00:00</span></div>
+        <div class="stat-row"><span>النقاط المرسلة</span><span id="pointsCount">0</span></div>
+        <div class="stat-row"><span>الدقة</span><span id="accuracyInfo">—</span></div>
+    </div>
+    <button class="btn danger" onclick="stopSharing()">إيقاف المشاركة</button>
   </div>
 </div>
+
 <div id="view" class="screen hidden">
   <div class="topbar">
     <button class="icon-btn" onclick="goTo('home')">←</button>
-    <div class="title">متابعة موقع</div>
-    <button class="icon-btn" onclick="refreshMap()">🔄</button>
-    <button class="icon-btn" id="changeCodeBtn" onclick="resetViewSession()" style="display:none;" title="تغيير الكود">✖</button>
+    <div class="title">متابعة الموقع</div>
+    <button class="icon-btn" id="changeCodeBtn" onclick="resetViewSession()" style="display:none;">✖</button>
   </div>
-  <div id="joinForm" class="join-form"><div class="big-icon">📍</div><p class="center-text">أدخل الكود المكون من 6 أرقام:</p><input type="tel" id="codeInput" class="code-input" maxlength="6" placeholder="000000" inputmode="numeric"><button class="btn primary big" onclick="joinSession()">متابعة</button></div>
-  <div id="mapView" class="hidden">
-    <div class="map-status"><span class="dot green"></span><span>متصل</span><span style="margin-right:auto;color:var(--secondary)" id="lastUpdate">—</span></div>
-    <div id="map"></div>
-    <div class="history-section"><h3>📅 السجل اليومي</h3><input type="date" id="datePicker" class="date-picker" onchange="refreshMap()"><div class="history-list" id="historyList"></div></div>
+
+  <!-- التبويبات (تظهر فقط بعد إدخال الكود) -->
+  <div class="tabs hidden" id="viewTabs">
+      <button class="tab-btn active" onclick="switchTab('live')">مباشر</button>
+      <button class="tab-btn" onclick="switchTab('history')">السجل</button>
+      <button class="tab-btn" onclick="switchTab('manual')">يدوي</button>
+  </div>
+
+  <div id="joinForm" class="join-form">
+    <div class="big-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg></div>
+    <p class="center-text">أدخل الكود المكون من 6 أرقام</p>
+    <input type="tel" id="codeInput" class="code-input" maxlength="6" placeholder="000000" inputmode="numeric">
+    <button class="btn primary big" onclick="joinSession()">متابعة</button>
+  </div>
+
+  <div id="mapView" class="hidden" style="flex:1; display:flex; flex-direction:column;">
+      <!-- التبويب المباشر -->
+      <div id="tab-live" class="tab-content active">
+          <div id="map-live" class="map-container"></div>
+          <div class="live-list">
+              <h3 style="font-size:15px; margin-bottom:10px; color:var(--text-muted);">آخر 5 إحداثيات</h3>
+              <div id="liveList"></div>
+          </div>
+      </div>
+
+      <!-- تبويب السجل -->
+      <div id="tab-history" class="tab-content">
+          <div class="history-list" id="historyAccordion">
+              <!-- سيتم تعبئتها برمجياً -->
+          </div>
+      </div>
+
+      <!-- التبويب اليدوي -->
+      <div id="tab-manual" class="tab-content">
+          <div id="map-manual" class="map-container" style="height:50vh;"></div>
+          <div class="manual-form">
+              <div class="search-box">
+                  <input type="text" id="searchCoords" placeholder="33.315, 44.366">
+                  <button onclick="flyToInput()">انتقال</button>
+              </div>
+              <p class="center-text" style="margin:0; font-size:13px;">الصق الإحداثيات (خط العرض، خط الطول) واضغط انتقال.</p>
+          </div>
+      </div>
   </div>
 </div>
+
+<!-- نافذة عرض الإحداثي التاريخي (خريطة كاملة) -->
+<div id="historicalModal" class="hidden">
+    <div class="modal-header">
+        <button class="icon-btn" onclick="closeHistoricalModal()">←</button>
+        <div class="modal-title" id="modalCoordsTitle">الإحداثي</div>
+        <button class="copy-btn" onclick="copyModalCoords()">📋</button>
+    </div>
+    <div id="map-history"></div>
+</div>
+
 <div id="settings" class="screen hidden">
   <div class="topbar"><button class="icon-btn" onclick="goTo('home')">←</button><div class="title">الإعدادات</div><span style="width:30px"></span></div>
   <div class="content">
-    <div class="card"><h3>🎨 المظهر</h3><div class="theme-options"><label class="theme-option"><input type="radio" name="theme" value="light" onchange="setTheme('light')"><span>☀️ نهاري</span></label><label class="theme-option"><input type="radio" name="theme" value="dark" onchange="setTheme('dark')"><span>🌙 ليلي</span></label><label class="theme-option"><input type="radio" name="theme" value="auto" onchange="setTheme('auto')"><span>⚙️ تلقائي</span></label></div></div>
+    <div class="card">
+        <h3>المظهر</h3>
+        <div class="theme-options">
+            <label class="theme-option"><input type="radio" name="theme" value="light" onchange="setTheme('light')"><span>☀️ نهاري</span></label>
+            <label class="theme-option"><input type="radio" name="theme" value="dark" onchange="setTheme('dark')"><span>🌙 ليلي</span></label>
+        </div>
+    </div>
   </div>
 </div>
+
 <script>
 const BGGeo = window.Capacitor ? window.Capacitor.Plugins.BackgroundGeolocation : null;
-const state = { sharing: { sessionId:null, code:null, startTime:null, pointsSent:0, timerInterval:null, watchId:null }, viewing: { sessionId:null, map:null, marker:null, polyline:null, pollInterval:null } };
+const AppPlugin = window.Capacitor ? window.Capacitor.Plugins.App : null;
 
-// سيتم وضع رابط Render هنا لاحقاً
 const SERVER_URL = 'https://owlix-server.onrender.com'; 
+const state = { 
+    sharing: { sessionId:null, code:null, startTime:null, pointsSent:0, timerInterval:null, watchId:null }, 
+    viewing: { sessionId:null, code:null, allPoints: [], liveMap:null, manualMap:null, historyMap:null, liveMarker:null, manualMarker:null, currentModalCoords:null } 
+};
 
-function getServerUrl() { return SERVER_URL; }
+// --- Theme Logic ---
+function applyTheme(mode) {
+    if (mode === 'dark') document.body.classList.add('dark');
+    else document.body.classList.remove('dark');
+    const radio = document.querySelector(`input[name="theme"][value="${mode}"]`);
+    if(radio) radio.checked = true;
+}
+function setTheme(mode) { localStorage.setItem('owlix_theme', mode); applyTheme(mode); }
 
-setTimeout(() => {
-    try { const savedTheme = localStorage.getItem('owlix_theme') || 'light'; applyTheme(savedTheme); } catch(e) {}
-    goTo('home'); 
-}, 1500);
+// --- Navigation & Back Button ---
+function goTo(id) { 
+    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden')); 
+    document.getElementById(id).classList.remove('hidden'); 
+    if (id === 'view') {
+        setTimeout(() => {
+            if (state.viewing.liveMap) state.viewing.liveMap.invalidateSize();
+            if (state.viewing.manualMap) state.viewing.manualMap.invalidateSize();
+        }, 100);
+    }
+}
 
-function goTo(id) { document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); if (id === 'view' && state.viewing.map) setTimeout(() => state.viewing.map.invalidateSize(), 100); if (id === 'settings') { loadTheme(); } }
+if (AppPlugin) {
+    AppPlugin.addListener('backButton', () => {
+        const activeScreen = document.querySelector('.screen:not(.hidden)').id;
+        if (!document.getElementById('historicalModal').classList.contains('hidden')) {
+            closeHistoricalModal();
+        } else if (activeScreen !== 'home' && activeScreen !== 'splash') {
+            goTo('home'); 
+        } else {
+            AppPlugin.exitApp(); 
+        }
+    });
+}
+
+// --- Init App ---
+window.addEventListener('load', () => {
+    const savedTheme = localStorage.getItem('owlix_theme') || 'light';
+    applyTheme(savedTheme);
+    
+    // استعادة الجلسة السابقة إن وجدت
+    const savedSession = localStorage.getItem('owlix_viewing_session');
+    if (savedSession) {
+        try {
+            const data = JSON.parse(savedSession);
+            state.viewing.sessionId = data.sessionId;
+            state.viewing.code = data.code;
+            showMapView(); // الدخول مباشرة للخريطة
+        } catch(e) { console.error(e); }
+    }
+    
+    setTimeout(() => goTo('home'), 2000);
+});
+
+// --- Sharing ---
+function copyCode() { navigator.clipboard.writeText(state.sharing.code).then(() => alert('تم النسخ')); }
+function shareCode() { if (navigator.share) navigator.share({ text: `كود OWLIX: ${state.sharing.code}` }); else copyCode(); }
 
 async function startSharing() {
   try {
-    const res = await fetch(`${getServerUrl()}/api/sessions`, { method: 'POST' });
-    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const res = await fetch(`${SERVER_URL}/api/sessions`, { method: 'POST' });
     const data = await res.json();
-    
     state.sharing.sessionId = data.sessionId;
     state.sharing.code = data.code;
     state.sharing.startTime = Date.now();
     state.sharing.pointsSent = 0;
-
     document.getElementById('shareIdle').classList.add('hidden');
     document.getElementById('shareActive').classList.remove('hidden');
     document.getElementById('codeDisplay').textContent = data.code;
-    document.getElementById('shareActiveDot').classList.add('green');
-    document.getElementById('shareStatus').textContent = 'نشطة (خلفية)';
+    document.getElementById('shareStatus').textContent = 'نشط (خلفية)';
     document.getElementById('shareDot').classList.add('green');
-    startTimer();
-
+    
     if (BGGeo) {
       state.sharing.watchId = await BGGeo.addWatcher({
-        backgroundMessage: "OWLIX يقوم بتتبع موقعك",
-        backgroundTitle: "المشاركة نشطة",
-        requestPermissions: true,
-        stale: false,
-        distanceFilter: 20 
-      }, async (location, error) => {
-        if (error) { console.error(error); return; }
-        if (location) { await queueAndSendLocation(location.latitude, location.longitude, location.accuracy); }
-      });
-    } else {
-      if (navigator.geolocation) {
+        backgroundMessage: "OWLIX يبث موقعك", backgroundTitle: "البث نشط", requestPermissions: true, stale: false, distanceFilter: 20 
+      }, async (location) => { if (location) await queueAndSendLocation(location.latitude, location.longitude, location.accuracy); });
+    } else if (navigator.geolocation) {
         state.sharing.watchId = navigator.geolocation.watchPosition(
           (pos) => queueAndSendLocation(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy),
           (err) => console.warn(err), { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 }
         );
-      }
     }
-  } catch (e) { alert('فشل الاتصال بالخادم.\nالسبب: ' + e.message); }
+  } catch (e) { alert('فشل الاتصال بالخادم.'); }
 }
-
-function startTimer() { state.sharing.timerInterval = setInterval(() => { const e = Math.floor((Date.now() - state.sharing.startTime) / 1000); document.getElementById('shareTimer').textContent = `${String(Math.floor(e/3600)).padStart(2,'0')}:${String(Math.floor((e%3600)/60)).padStart(2,'0')}:${String(e%60).padStart(2,'0')}`; }, 1000); }
-
-function getQueue() { return JSON.parse(localStorage.getItem('owlix_queue') || '[]'); }
-function saveQueue(q) { localStorage.setItem('owlix_queue', JSON.stringify(q)); updateQueueUI(); }
-function updateQueueUI() { document.getElementById('queueCount').textContent = getQueue().length; }
 
 async function queueAndSendLocation(lat, lng, accuracy) {
   if (!state.sharing.sessionId) return;
-  let q = getQueue();
-  q.push({ sessionId: state.sharing.sessionId, lat, lng, accuracy, ts: Date.now() });
-  saveQueue(q);
-  await flushQueue();
-}
-
-async function flushQueue() {
-  let q = getQueue();
-  if (q.length === 0) return;
-  let remaining = [];
-  for (let point of q) {
-    try {
-      const res = await fetch(`${getServerUrl()}/api/sessions/${point.sessionId}/location`, { 
+  try {
+    await fetch(`${SERVER_URL}/api/sessions/${state.sharing.sessionId}/location`, { 
         method: 'POST', headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify({ lat: point.lat, lng: point.lng, accuracy: point.accuracy }) 
-      });
-      if (res.ok) {
-        state.sharing.pointsSent++;
-        document.getElementById('pointsCount').textContent = state.sharing.pointsSent;
-        document.getElementById('accuracyInfo').textContent = `±${Math.round(point.accuracy)}م`;
-      } else { remaining.push(point); }
-    } catch (e) { remaining.push(point); break; }
-  }
-  saveQueue(remaining);
+        body: JSON.stringify({ lat, lng, accuracy }) 
+    });
+    state.sharing.pointsSent++;
+    document.getElementById('pointsCount').textContent = state.sharing.pointsSent;
+    document.getElementById('accuracyInfo').textContent = `±${Math.round(accuracy)}م`;
+  } catch(e) {}
 }
 
 async function stopSharing() {
   if (BGGeo && state.sharing.watchId) await BGGeo.removeWatcher({ id: state.sharing.watchId });
   else if (state.sharing.watchId) navigator.geolocation.clearWatch(state.sharing.watchId);
-  if (state.sharing.timerInterval) clearInterval(state.sharing.timerInterval);
-  
-  if (state.sharing.sessionId) {
-    await flushQueue();
-    await fetch(`${getServerUrl()}/api/sessions/${state.sharing.sessionId}`, { method: 'DELETE' }).catch(()=>{});
-  }
-  
   state.sharing = { sessionId:null, code:null, startTime:null, pointsSent:0, timerInterval:null, watchId:null };
-  document.getElementById('shareIdle').classList.remove('hidden'); document.getElementById('shareActive').classList.add('hidden'); document.getElementById('shareActiveDot').classList.remove('green'); document.getElementById('shareStatus').textContent = 'متوقفة'; document.getElementById('shareDot').classList.remove('green');
+  document.getElementById('shareIdle').classList.remove('hidden'); document.getElementById('shareActive').classList.add('hidden');
+  document.getElementById('shareStatus').textContent = 'غير نشط'; document.getElementById('shareDot').classList.remove('green');
 }
 
-function copyCode() { navigator.clipboard.writeText(state.sharing.code).then(() => alert('تم النسخ')); }
-function shareCode() { if (navigator.share) navigator.share({ text: `كود OWLIX: ${state.sharing.code}` }); else copyCode(); }
+// --- Viewing (Map & Tabs) ---
+function switchTab(tabId) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById(`tab-${tabId}`).classList.add('active');
+    
+    if (tabId === 'live' && state.viewing.liveMap) state.viewing.liveMap.invalidateSize();
+    if (tabId === 'manual' && state.viewing.manualMap) state.viewing.manualMap.invalidateSize();
+}
 
 async function joinSession() {
   const code = document.getElementById('codeInput').value.trim();
   if (code.length !== 6) return alert('أدخل 6 أرقام');
   try {
-    const res = await fetch(`${getServerUrl()}/api/sessions/join`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
-    if (!res.ok) return alert('كود غير صالح أو الخادم غير متاح.');
+    const res = await fetch(`${SERVER_URL}/api/sessions/join`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
+    if (!res.ok) return alert('كود غير صالح');
     const data = await res.json();
+    
     state.viewing.sessionId = data.sessionId;
-    document.getElementById('joinForm').classList.add('hidden'); 
-    document.getElementById('mapView').classList.remove('hidden'); 
-    document.getElementById('changeCodeBtn').style.display = 'block';
-    document.getElementById('viewStatus').textContent = 'متصل'; 
-    document.getElementById('viewDot').classList.add('green');
-    initMap();
-    const today = new Date().toISOString().split('T')[0]; document.getElementById('datePicker').value = today; refreshMap();
-    state.viewing.pollInterval = setInterval(refreshMap, 5000);
-  } catch (e) { alert('خطأ في الاتصال بالخادم: ' + e.message); }
+    state.viewing.code = code;
+    
+    // حفظ الجلسة لعدم فقدانها عند التحديث
+    localStorage.setItem('owlix_viewing_session', JSON.stringify({ sessionId: data.sessionId, code: code }));
+    
+    showMapView();
+  } catch (e) { alert('خطأ في الاتصال بالخادم'); }
+}
+
+function showMapView() {
+    document.getElementById('joinForm').classList.add('hidden');
+    document.getElementById('mapView').classList.remove('hidden');
+    document.getElementById('viewTabs').classList.remove('hidden');
+    document.getElementById('changeCodeBtn').style.display = 'flex';
+    
+    // تهيئة الخرائط
+    initMaps();
+    
+    // جلب البيانات
+    fetchAllHistory();
+    state.viewing.pollInterval = setInterval(fetchAllHistory, 5000);
 }
 
 function resetViewSession() {
     if (state.viewing.pollInterval) clearInterval(state.viewing.pollInterval);
+    localStorage.removeItem('owlix_viewing_session');
     state.viewing.sessionId = null;
-    state.viewing.hasCentered = false;
     document.getElementById('joinForm').classList.remove('hidden');
     document.getElementById('mapView').classList.add('hidden');
+    document.getElementById('viewTabs').classList.add('hidden');
     document.getElementById('changeCodeBtn').style.display = 'none';
     document.getElementById('codeInput').value = '';
-    document.getElementById('viewStatus').textContent = 'غير متصل';
-    document.getElementById('viewDot').classList.remove('green');
-    if (state.viewing.polyline) state.viewing.map.removeLayer(state.viewing.polyline);
-    if (state.viewing.marker) state.viewing.map.removeLayer(state.viewing.marker);
 }
 
-function initMap() { if (state.viewing.map) return; state.viewing.map = L.map('map').setView([33.315, 44.366], 12); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(state.viewing.map); }
+function createMap(elementId) {
+    const map = L.map(elementId, { zoomControl: false }).setView([33.315, 44.366], 13); 
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(map);
+    return map;
+}
 
-async function refreshMap() {
-  if (!state.viewing.sessionId) return;
-  const dateStr = document.getElementById('datePicker').value || new Date().toISOString().split('T')[0];
-  try {
-    const res = await fetch(`${getServerUrl()}/api/sessions/${state.viewing.sessionId}/history?date=${dateStr}`);
-    const points = await res.json();
-    if (state.viewing.polyline) state.viewing.map.removeLayer(state.viewing.polyline);
-    if (points.length > 0) {
-      const coords = points.map(p => [p.lat, p.lng]);
-      state.viewing.polyline = L.polyline(coords, { color:'#8B6F47', weight:3 }).addTo(state.viewing.map);
-      const last = points[points.length - 1];
-      if (state.viewing.marker) state.viewing.marker.setLatLng([last.lat, last.lng]);
-      else state.viewing.marker = L.marker([last.lat, last.lng]).addTo(state.viewing.map);
-      if (!state.viewing.hasCentered) { state.viewing.map.fitBounds(state.viewing.polyline.getBounds(), { padding:[30,30] }); state.viewing.hasCentered = true; }
-      document.getElementById('lastUpdate').textContent = 'آخر تحديث: الآن';
+function initMaps() {
+    if (!state.viewing.liveMap) {
+        state.viewing.liveMap = createMap('map-live');
+        state.viewing.manualMap = createMap('map-manual');
     }
-    renderHistory(points);
-  } catch (e) {}
+}
+
+async function fetchAllHistory() {
+    if (!state.viewing.sessionId) return;
+    try {
+        // جلب كل النقاط (بدون تاريخ محدد)
+        const res = await fetch(`${SERVER_URL}/api/sessions/${state.viewing.sessionId}/history`);
+        const points = await res.json();
+        state.viewing.allPoints = points;
+        
+        renderLive(points);
+        renderHistory(points);
+        
+    } catch (e) { console.warn('Error fetching history', e); }
+}
+
+function renderLive(points) {
+    const list = document.getElementById('liveList');
+    // ترتيب تنازلي (الأحدث أولاً) وأخذ 5 فقط
+    const sorted = [...points].sort((a, b) => new Date(b.recordedAt) - new Date(a.recordedAt));
+    const latest5 = sorted.slice(0, 5);
+    
+    if (latest5.length === 0) {
+        list.innerHTML = '<p style="text-align:center;color:var(--text-muted);">لا توجد إحداثيات اليوم</p>';
+        return;
+    }
+
+    // تحديث الخريطة المباشرة
+    if (state.viewing.liveMap) {
+        if (state.viewing.liveMarker) state.viewing.liveMap.removeLayer(state.viewing.liveMarker);
+        state.viewing.liveMarker = L.marker([latest5[0].lat, latest5[0].lng]).addTo(state.viewing.liveMap);
+        state.viewing.liveMap.setView([latest5[0].lat, latest5[0].lng], 16);
+    }
+
+    list.innerHTML = latest5.map(p => {
+        const t = new Date(p.recordedAt);
+        const time = `${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
+        return `
+        <div class="live-item" onclick="openHistoricalModal(${p.lat}, ${p.lng}, '${time}')">
+            <span class="time">${time}</span>
+            <span class="coords">${p.lat.toFixed(4)}, ${p.lng.toFixed(4)}</span>
+            <button class="copy-btn" onclick="event.stopPropagation(); copyText('${p.lat}, ${p.lng}')">📋</button>
+        </div>`;
+    }).join('');
 }
 
 function renderHistory(points) {
-  const list = document.getElementById('historyList');
-  if (points.length === 0) return list.innerHTML = '<p style="text-align:center;color:#999;padding:12px">لا توجد بيانات</p>';
-  const step = Math.max(1, Math.floor(points.length / 30)); const items = [];
-  for (let i = 0; i < points.length; i += step) { const t = new Date(points[i].recorded_at); items.push(`<div class="history-item"><span class="time">${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}</span><span>${points[i].lat.toFixed(4)}, ${points[i].lng.toFixed(4)}</span></div>`); }
-  list.innerHTML = items.join('');
+    const accordion = document.getElementById('historyAccordion');
+    // تجميع حسب التاريخ
+    const grouped = {};
+    points.forEach(p => {
+        const date = p.recordedAt.split('T')[0]; // YYYY-MM-DD
+        if (!grouped[date]) grouped[date] = [];
+        grouped[date].push(p);
+    });
+
+    // ترتيب التواريخ تنازلياً
+    const dates = Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a));
+    
+    if (dates.length === 0) {
+        accordion.innerHTML = '<p style="text-align:center;color:var(--text-muted);margin-top:20px;">لا توجد سجلات سابقة</p>';
+        return;
+    }
+
+    accordion.innerHTML = dates.map(date => {
+        const dayPoints = grouped[date];
+        const formattedDate = new Date(date).toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        
+        const items = dayPoints.map(p => {
+            const t = new Date(p.recordedAt);
+            const time = `${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
+            return `
+            <div class="history-item" onclick="openHistoricalModal(${p.lat}, ${p.lng}, '${time}')">
+                <span>${time}</span>
+                <span class="coords">${p.lat.toFixed(4)}, ${p.lng.toFixed(4)}</span>
+                <button class="copy-btn" onclick="event.stopPropagation(); copyText('${p.lat}, ${p.lng}')">📋</button>
+            </div>`;
+        }).join('');
+
+        return `
+        <div class="accordion">
+            <div class="accordion-header" onclick="this.nextElementSibling.classList.toggle('open')">
+                <span>📅 ${formattedDate}</span>
+                <span>▼</span>
+            </div>
+            <div class="accordion-content">${items}</div>
+        </div>`;
+    }).join('');
 }
 
-function applyTheme(mode) { const isDark = mode === 'dark' || (mode === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches); document.body.classList.toggle('dark', isDark); const radio = document.querySelector(`input[name="theme"][value="${mode}"]`); if (radio) radio.checked = true; }
-function setTheme(mode) { localStorage.setItem('owlix_theme', mode); applyTheme(mode); }
-function loadTheme() { applyTheme(localStorage.getItem('owlix_theme') || 'light'); }
+function openHistoricalModal(lat, lng, time) {
+    state.viewing.currentModalCoords = `${lat}, ${lng}`;
+    document.getElementById('modalCoordsTitle').textContent = `موقع الساعة ${time}`;
+    document.getElementById('historicalModal').classList.remove('hidden');
+    
+    setTimeout(() => {
+        if (!state.viewing.historyMap) {
+            state.viewing.historyMap = createMap('map-history');
+        }
+        state.viewing.historyMap.invalidateSize();
+        state.viewing.historyMap.setView([lat, lng], 17);
+        
+        // مسح العلامات القديمة وإضافة الجديدة
+        state.viewing.historyMap.eachLayer(layer => { if (layer instanceof L.Marker) state.viewing.historyMap.removeLayer(layer); });
+        L.marker([lat, lng]).addTo(state.viewing.historyMap).bindPopup('هنا كان الشخص').openPopup();
+    }, 100);
+}
+
+function closeHistoricalModal() {
+    document.getElementById('historicalModal').classList.add('hidden');
+}
+
+function copyModalCoords() {
+    if (state.viewing.currentModalCoords) copyText(state.viewing.currentModalCoords);
+}
+
+function copyText(text) {
+    navigator.clipboard.writeText(text).then(() => alert('تم النسخ: ' + text));
+}
+
+// --- Manual Tab ---
+function flyToInput() {
+    const input = document.getElementById('searchCoords').value.trim();
+    if(!input) return;
+    const parts = input.split(',');
+    if (parts.length === 2) {
+        const lat = parseFloat(parts[0]);
+        const lng = parseFloat(parts[1]);
+        if (!isNaN(lat) && !isNaN(lng)) {
+            if (state.viewing.manualMap) {
+                state.viewing.manualMap.flyTo([lat, lng], 17, { duration: 1.5 });
+                if (state.viewing.manualMarker) state.viewing.manualMap.removeLayer(state.viewing.manualMarker);
+                state.viewing.manualMarker = L.marker([lat, lng]).addTo(state.viewing.manualMap);
+            }
+        } else { alert('صيغة الإحداثيات غير صحيحة.'); }
+    } else { alert('يرجى كتابة الإحداثيات بهذا الشكل: 33.315, 44.366'); }
+}
 </script>
 </body>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                            </html>
+</html>
+EOF
